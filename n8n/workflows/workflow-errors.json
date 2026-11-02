@@ -1,0 +1,54 @@
+{
+  "name": "LendLoop — workflow failures",
+  "nodes": [
+    {
+      "id": "workflow-failed",
+      "name": "Workflow failed",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "minimal-failure-log",
+      "name": "Minimal failure log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const e=$input.first().json; const failure={workflow:e.workflow?.name??\"unknown\",execution:e.execution?.id??null,failedAt:new Date().toISOString(),action:\"Inspect the failed execution and retry after correcting configuration.\"}; console.error(JSON.stringify(failure)); return [{json:failure}];",
+        "mode": "runOnceForAllItems"
+      }
+    }
+  ],
+  "connections": {
+    "Workflow failed": {
+      "main": [
+        [
+          {
+            "node": "Minimal failure log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Etc/UTC",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "executionTimeout": 300
+  },
+  "tags": []
+}

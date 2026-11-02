@@ -1,0 +1,11 @@
+node_modules/
+.next/
+.env*
+!.env.example
+!.env.n8n.example
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+.convex/
+.local/

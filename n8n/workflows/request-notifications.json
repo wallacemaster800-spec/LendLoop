@@ -1,0 +1,170 @@
+{
+  "name": "LendLoop — request notifications",
+  "nodes": [
+    {
+      "id": "signed-event",
+      "name": "Signed event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lendloop-events",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "lendloop-events"
+    },
+    {
+      "id": "verify-event",
+      "name": "Verify event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const crypto = require(\"crypto\");\nconst envelope = $input.first().json.body;\nconst secret = $env.CONVEX_TO_N8N_SECRET;\nif (!secret || secret.length < 32) throw new Error(\"Webhook verification is not configured\");\nif (\n  !envelope ||\n  typeof envelope.payload !== \"string\" ||\n  envelope.payload.length > 4096 ||\n  typeof envelope.timestamp !== \"string\" ||\n  !/^\\d{10}$/.test(envelope.timestamp) ||\n  typeof envelope.signature !== \"string\" ||\n  !/^[a-f0-9]{64}$/.test(envelope.signature)\n) {\n  throw new Error(\"Invalid webhook envelope\");\n}\nif (Math.abs(Date.now() / 1000 - Number(envelope.timestamp)) > 300)\n  throw new Error(\"Expired webhook\");\nconst input = [\"POST\", \"/webhook/lendloop-events\", envelope.timestamp, envelope.payload].join(\"\\n\");\nconst expected = crypto.createHmac(\"sha256\", secret).update(input).digest();\nconst actual = Buffer.from(envelope.signature, \"hex\");\nif (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected))\n  throw new Error(\"Invalid webhook signature\");\nconst payload = JSON.parse(envelope.payload);\nif (!payload || Object.keys(payload).length !== 1 || typeof payload.eventId !== \"string\")\n  throw new Error(\"Invalid event\");\nreturn [{ json: { path: \"/automation/notify\", data: { eventId: payload.eventId } } }];\n",
+        "mode": "runOnceForAllItems"
+      }
+    },
+    {
+      "id": "sign-notification-receipt",
+      "name": "Sign notification receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const crypto = require(\"crypto\");\nconst secret = $env.N8N_TO_CONVEX_SECRET;\nconst base = $env.CONVEX_SITE_URL;\nif (!secret || secret.length < 32 || !base || !/^https:\\/\\/[^/]+\\.convex\\.site$/.test(base)) {\n  throw new Error(\"Configure the Convex site URL and signing secret\");\n}\nreturn $input.all().map((item) => {\n  const { path, data } = item.json;\n  if (![\"/automation/overdue\", \"/automation/notify\", \"/automation/remind\"].includes(path))\n    throw new Error(\"Unknown integration route\");\n  const body = JSON.stringify(data);\n  const timestamp = Math.floor(Date.now() / 1000).toString();\n  const input = [\"POST\", path, timestamp, body].join(\"\\n\");\n  const signature = crypto.createHmac(\"sha256\", secret).update(input).digest(\"hex\");\n  return { json: { url: base + path, body, timestamp, signature } };\n});\n",
+        "mode": "runOnceForAllItems"
+      }
+    },
+    {
+      "id": "record-mock-notification",
+      "name": "Record mock notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "x-lendloop-timestamp",
+              "value": "={{ $json.timestamp }}"
+            },
+            {
+              "name": "x-lendloop-signature",
+              "value": "={{ $json.signature }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.body }}",
+        "options": {
+          "timeout": 15000,
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "acknowledge",
+      "name": "Acknowledge",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { ok: true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Signed event": {
+      "main": [
+        [
+          {
+            "node": "Verify event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify event": {
+      "main": [
+        [
+          {
+            "node": "Sign notification receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sign notification receipt": {
+      "main": [
+        [
+          {
+            "node": "Record mock notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record mock notification": {
+      "main": [
+        [
+          {
+            "node": "Acknowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Etc/UTC",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "executionTimeout": 300
+  },
+  "tags": []
+}
