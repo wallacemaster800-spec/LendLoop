@@ -1,40 +1,29 @@
-# Local handoff — 2 November 2026
+# Delivery status — 4 November 2026
 
-## Implemented and checked
+## Implemented
 
-- Next.js production build and strict TypeScript check pass.
-- 42 automated tests pass: business rules, Convex permissions, integration HTTP endpoints, HMAC, idempotency, delivery retries and exported n8n code.
-- Six Chromium browser tests pass: public/setup page, listing CRUD, full demo loan lifecycle, admin view, mobile layout and browser errors.
-- Local n8n 2.45.7 is installed in Docker, bound to 127.0.0.1:5678.
-- The three application workflows are imported, with both main workflows linked to the error workflow. They remain inactive.
-- An additional local signing-check workflow ran successfully inside n8n: crypto module access, environment access, webhook verification and response signing.
-- Production dependencies and development tooling passed npm audit with zero reported vulnerabilities at installation.
-- Screenshots were inspected at desktop and mobile widths. Fonts are bundled locally.
-- .env.local exists with empty application keys. .env.n8n contains independent randomly generated local secrets. Both are ignored by Git; no credentials are included in exports.
+- Next.js App Router, TypeScript, Clerk authentication and Convex backend.
+- Public name/category catalog; authenticated listings, date-range requests, approvals, declines, returns and administrator tools.
+- Server-enforced ownership and roles. Signed n8n notifications and overdue reminders, idempotent callbacks, retry outbox and error workflow.
+- Optional listing photos: authenticated storage, server-side WebP conversion, content validation, quotas and removal. See PHOTOS.md and SECURITY.md.
+- Logged mock notifications, as allowed by the assignment. No email provider or payment flow.
 
-## Still requires account setup and connected testing
+## Verification evidence
 
-- Create/configure Clerk and Convex development applications.
-- Set the Clerk issuer, admin user ID, integration secrets and HTTPS webhook URL in Convex.
-- Complete the n8n owner-account setup at localhost:5678, enter the Convex site URL/public n8n URL, then restart the container and activate the main workflows.
-- Provide public HTTPS access to the webhook while keeping the editor private.
-- Run the real two-account acceptance checks in ACCEPTANCE.md. The local demo and mocked Convex tests do not verify a real Clerk login or cloud deployment.
-- Publish a GitHub repository and, if desired, deploy the frontend. Nothing has been submitted to the employer.
+- 63 automated tests passed: business rules, authorization, signatures, retries, workflows, gateway and image processing/storage permissions.
+- Eight Chromium tests passed on the demo interface; these do not test Clerk sign-in.
+- TypeScript and the Next.js production build passed.
+- Connected backend and n8n round trip verified on 3 November: three signed deliveries, replay deduplication, loan lifecycle and forbidden approval. See connected-verification.json. These use synthetic Convex CLI identities.
+- Authenticated photo API verified on 4 November with an existing Clerk development session: JPEG upload, optimized WebP read, anonymous read denied, foreign Origin denied, disguised script rejected and deletion confirmed. The temporary listing was archived. See photo-verification.json. This was an API test, not a browser file-picker test.
 
-## Open it
+## Run and review
 
-Double-click Start-LendLoop.cmd and visit http://localhost:3100/demo. This starts the already-built production preview. Use npm run dev when editing the source. Rebuild after source or environment changes before using npm start.
+Follow README.md to configure your own Clerk, Convex and n8n development environment. The app uses http://localhost:3100; /demo and /demo/public are disposable sample views. Photo upload requires the connected authenticated app.
 
-Docker has its own lifecycle. To stop n8n without deleting its workflows:
+The repository includes workflow exports and production considerations. No public hosted application is claimed. A temporary webhook tunnel depends on the local computer; see TUNNEL.md.
 
-```sh
-docker compose --env-file .env.n8n stop
-```
+## Remaining manual checks and production work
 
-To resume it:
-
-```sh
-docker compose --env-file .env.n8n up -d
-```
-
-The extra local verification workflow is named “LendLoop local signing check”. It never calls an employer or sends a notification; it is not one of the deliverable automation exports.
+- Complete the two-real-account Clerk browser walkthrough in ACCEPTANCE.md. One real user has confirmed signing in; backend authorization is covered separately by tests.
+- Production hosting, stable webhook endpoint, monitoring, global resource limits, pagination and orphan-file reconciliation remain future work; see PRODUCTION.md and SECURITY.md.
+- Portfolio publication and the job application email are separate from this source-code delivery.

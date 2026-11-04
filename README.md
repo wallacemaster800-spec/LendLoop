@@ -4,6 +4,10 @@ Borrow what you need. Lend what you don’t.
 
 A neighborhood tool library built with Next.js App Router, TypeScript, Clerk, Convex and n8n. Members list tools, request dates, approve loans and record returns. Administrators can remove listings, review all loans and award Trusted Lender badges.
 
+## Submission
+
+This is a take-home exercise, not a production service. Source, exported workflows and local setup are included. The in-memory demo is available locally at /demo; it is explicitly separate from the authenticated app. Verification evidence and remaining manual checks are recorded in [STATUS.md](docs/STATUS.md).
+
 ## Run locally
 
 Requires Node.js 22 and npm. Docker Desktop is needed only for local n8n.
@@ -16,7 +20,7 @@ npm run dev
 
 Open **http://localhost:3100**. Without Clerk and Convex keys, the home page explains what is missing. **/demo** is an interactive, in-memory preview with three sample personas. It uses the same dashboard components as the connected app, but has no authentication, persistent storage or background delivery. Refreshing resets it. It is not a substitute for integration testing.
 
-Port 3100 avoids the job tracker already running on port 3000. On Windows, double-click `Start-LendLoop.cmd`.
+The development server uses port 3100. On Windows, double-click `Start-LendLoop.cmd`.
 
 ### 1. Clerk
 
@@ -77,7 +81,22 @@ Convex Cloud cannot reach your localhost. Use a hosted n8n instance or a control
 
 The supplied Docker profile binds the editor to 127.0.0.1, uses internal task runners, allows only the crypto built-in module and retains executions for seven days. It is a **local development profile**, not a hardened internet deployment. n8n Cloud is not the drop-in target for these environment-backed Code nodes; use the documented self-hosted setup.
 
-### 4. First real loan
+### 4. Listing photos (optional extension)
+
+Set NEXT_PUBLIC_CONVEX_SITE_URL in .env.local to your Convex HTTP action URL (.convex.site). After configuring your development project, run:
+
+```sh
+node scripts/configure-photo-storage.mjs
+npx convex dev --once
+```
+
+This creates a private PHOTO_PROCESSOR_SECRET shared by Next.js and Convex. Restart Next.js afterwards. The helper never prints the key. In production, provision the same private secret in both services through your secret manager.
+
+Save a listing, then choose a photo and click **Upload photo**. Existing listings expose the same controls under **Edit listing**. Images are optional: JPEG, PNG or static WebP, up to 5 MiB and 20 megapixels. The Node.js server validates and decodes the bytes, strips metadata and converts to WebP (maximum 1600 × 1600). Only the processed image enters Convex File Storage. Reading requires membership; replacing requires ownership. The public page still exposes names and categories only.
+
+See [photo setup and usage](docs/PHOTOS.md) and the separate [security review](docs/SECURITY.md), including trust boundaries and remaining production limitations.
+
+### 5. First real loan
 
 Sign in as two different users (two browser profiles work well). The first lists a tool. The second requests dates. The owner approves it, and either participant records its return after the loan has started. The delivery worker runs every minute; expand **Automation activity** on a loan to see notification delivery. Admins can retry failed event deliveries.
 
@@ -138,3 +157,7 @@ The daily n8n workflow reads overdue loans, processes each item and writes a rem
 - Strings are length-limited and rendered as React text, not HTML. HTTP integration bodies are size-limited. Browser framing is denied, and content-type sniffing is disabled.
 
 See [production changes](docs/PRODUCTION.md), [requirement coverage](docs/REQUIREMENTS.md), and [Diego's setup and walkthrough](docs/GUIA_DIEGO.md).
+
+## Local handoff and portfolio
+
+See [current verification status](docs/STATUS.md), [temporary signed webhook setup](docs/TUNNEL.md), and [portfolio material](docs/portfolio/README.md). A fresh checkout needs its own Clerk and Convex accounts and ignored environment files; no shared reviewer credentials are included. Run node scripts/capture-portfolio.mjs with the app serving on localhost:3100 to regenerate sample screenshots.

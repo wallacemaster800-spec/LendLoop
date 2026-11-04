@@ -1,4 +1,5 @@
 "use client";
+import { PhotoEditor } from "./photo-editor";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
   ArrowRight,
@@ -21,6 +22,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { categories, conditions, day, type Category, type Condition } from "@/lib/domain";
 import { Brand, Footer, ToolIcon } from "./brand";
+import { ToolVisual } from "./tool-visual";
 
 export type Tool = FunctionReturnType<typeof api.tools.list>[number];
 export type Loan = FunctionReturnType<typeof api.loans.list>[number];
@@ -73,7 +75,10 @@ function Modal({
       ref={dialog}
       aria-labelledby="modal-title"
       className="modal"
-      onCancel={close}
+      onCancel={(event) => {
+        event.preventDefault();
+        close();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) close();
       }}
@@ -91,10 +96,14 @@ function Modal({
   );
 }
 function ListingForm({
+  demo = false,
+  onPhotoBusy,
   tool,
   onSave,
   busy,
 }: {
+  demo?: boolean;
+  onPhotoBusy: (busy: boolean) => void;
   tool?: Tool;
   onSave: (data: ListingInput) => void;
   busy: boolean;
@@ -154,6 +163,20 @@ function ListingForm({
           placeholder="What’s included? Anything your neighbor should know?"
         />
       </label>
+      {!demo && tool && (
+        <PhotoEditor
+          tool={tool._id}
+          version={tool.photoVersion}
+          hasPhoto={!!tool.photoId}
+          onBusy={onPhotoBusy}
+        />
+      )}
+      {!tool && !demo && (
+        <p className="form-hint">
+          Create your listing first. You can add its photo in the next step.
+        </p>
+      )}
+      {demo && <p className="form-hint">Photo storage is available in the signed-in workspace.</p>}
       <p className="form-hint">Keep addresses and contact information out of your listing.</p>
       <button className="button primary" disabled={busy}>
         {busy ? "Saving…" : tool ? "Save changes" : "Add to the shelf"}
@@ -247,12 +270,12 @@ export function Dashboard({
       <main className="dashboard">
         <section className="dashboard-heading">
           <div>
-            <span className="eyebrow">A LITTLE LESS BUYING. A LITTLE MORE SHARING.</span>
+            <span className="eyebrow">LENDLOOP / MEMBER WORKSPACE</span>
             <h1>
-              Good to see you, {me.name.split(" ")[0]}
+              Your neighborhood
               <span className="brand-dot">.</span>
             </h1>
-            <p className="muted">What are you working on next?</p>
+            <p className="muted">Your next project starts here, {me.name.split(" ")[0]}.</p>
           </div>
           <button className="button primary" onClick={() => setModal({ kind: "listing" })}>
             <Plus size={18} /> Lend a tool
@@ -326,7 +349,7 @@ export function Dashboard({
           <>
             <div className="catalogue-heading">
               <div>
-                <h2>{tab === "My listings" ? "Your shared shelf" : "Find something useful"}</h2>
+                <h2>{tab === "My listings" ? "Your listings" : "Find your next tool"}</h2>
                 <p className="muted">
                   {tab === "My listings"
                     ? "Give your tools a life beyond the cupboard."
@@ -373,7 +396,16 @@ export function Dashboard({
                         <span />
                         {tool.available ? "Available today" : "Currently on loan"}
                       </span>
-                      <ToolIcon category={tool.category} size={80} />
+                      {tool.photoId && !demo ? (
+                        <img
+                          className="tool-photo"
+                          src={"/api/tools/" + tool._id + "/photo?v=" + (tool.photoVersion ?? 0)}
+                          alt={tool.name}
+                          loading="lazy"
+                        />
+                      ) : (
+                        <ToolVisual category={tool.category} />
+                      )}
                       <span className="condition">{tool.condition}</span>
                     </div>
                     <div className="tool-content">
@@ -677,9 +709,36 @@ export function Dashboard({
           )}
           {modal.kind === "listing" && (
             <ListingForm
-              tool={modal.tool}
+              demo={demo}
+              onPhotoBusy={setBusy}
+              tool={tools.find((t) => t._id === modal.tool?._id) ?? modal.tool}
               busy={busy}
-              onSave={(data) => run(() => actions.save(data), "Your shelf has been updated.", true)}
+              onSave={(data) =>
+                run(
+                  async () => {
+                    const id = await actions.save(data);
+                    if (!data.id && !demo && typeof id === "string") {
+                      setModal({
+                        kind: "listing",
+                        tool: {
+                          ...data,
+                          _id: id as Id<"tools">,
+                          _creationTime: Date.now(),
+                          owner: me._id,
+                          archived: false,
+                          mine: true,
+                          ownerName: me.name,
+                          trusted: me.trusted,
+                          available: true,
+                          booked: [],
+                        },
+                      });
+                    } else setModal(null);
+                  },
+                  "Listing saved. You can add an optional photo.",
+                  false,
+                )
+              }
             />
           )}
           {modal.kind === "borrow" && (

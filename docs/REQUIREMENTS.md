@@ -21,6 +21,8 @@
 | Retries and visible failures                  | leased outbox, retry queue, n8n execution history/error workflow |
 | Per-loan automation activity                  | loanView and expandable activity                                 |
 | Local setup / architecture / production notes | README, Compose, docs                                            |
-| GitHub repository                             | Local source prepared; remote publication remains to be done     |
+| GitHub repository                             | https://github.com/wallacemaster800-spec/LendLoop     |
 
-Connected acceptance requires the user's Clerk/Convex configuration and n8n workflow activation. Passing local tests does not verify those accounts, deployed webhook routing or a real production login.
+Clerk, Convex and local n8n are connected. The deployed backend and signed webhook round trip were verified with synthetic development identities; see STATUS.md and connected-verification.json. Two real Clerk browser sessions remain a manual acceptance check; this limitation is recorded rather than reported as tested. Authenticated photo API verification is recorded in photo-verification.json.
+
+Optional extension: authenticated listing photos in Convex File Storage, server-side WebP normalization, content validation, upload quotas and ownership enforcement. Photos were not required by the assignment.

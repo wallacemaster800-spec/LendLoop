@@ -1,42 +1,53 @@
-# Puesta en marcha y explicación
+# LendLoop: ejecución y demostración
 
-## Para verlo ahora
+## Aplicación de prueba
 
-Abrí Start-LendLoop.cmd. Entrá en http://localhost:3100/demo.
+LendLoop es un ejercicio técnico full stack para préstamo de herramientas. Las pantallas de demo usan datos de ejemplo. No es una tienda real, no procesa pagos y las notificaciones se registran en Convex como un canal simulado.
 
-La demo permite cambiar entre Sam, Alex y Morgan. Morgan tiene vista de administrador. Los cambios duran hasta refrescar; no se envían mensajes ni se crean cuentas reales.
+## Abrir en la computadora de Diego
 
-## Lo que necesitás hacer vos
+Carpeta: D:\portoflio pawsi\LendLoop
+En CMD: cd /d "D:\portoflio pawsi\LendLoop"
+Para editar: npm run dev
+Para usar la versión compilada: npm run build y después npm run start. También se puede abrir Start-LendLoop.cmd. Si ya hay un proceso en el puerto 3100, se reutiliza o se cierra antes de iniciar otro.
+Aplicación conectada: http://localhost:3100
+Demo interactiva: http://localhost:3100/demo
+Catálogo de muestra: http://localhost:3100/demo/public
 
-1. Crear una aplicación de desarrollo en Clerk y activar su integración con Convex.
-2. Pegar sus claves en .env.local, sin mandarlas por chat ni agregarlas a Git.
-3. Ejecutar npx convex dev, iniciar sesión y elegir/crear el proyecto.
-4. Configurar el issuer de Clerk y tu ID de usuario administrador en las variables de Convex.
-5. Copiar allí las dos claves de integración ya generadas en .env.n8n. Son distintas y tienen direcciones distintas.
-6. Completar la URL .convex.site y la URL pública de n8n en .env.n8n.
-7. Levantar n8n con Docker, crear su cuenta local, importar los tres JSON y seleccionar el workflow de errores en los otros dos. Publicar ambos workflows principales.
-8. Darle a Convex una URL HTTPS accesible para el webhook. Localhost no sirve desde la nube. El editor de n8n debe quedar privado.
-9. Hacer la prueba real con dos cuentas, siguiendo ACCEPTANCE.md.
-10. Elegir el repositorio GitHub y el alojamiento para la entrega. No está publicada ni enviada al empleador.
+## Clerk y Convex
 
-No hace falta un proveedor de correo: la consigna acepta notificaciones simuladas registradas, que es lo implementado. La integración real igual debe ejecutarse y verificarse.
+Las cuentas de desarrollo existentes ya están vinculadas. No hace falta crear nuevos proyectos. Diego inició sesión en la aplicación y su usuario está incluido en ADMIN_SUBJECTS, la lista de administradores del servidor. Actualizar la página permite recibir el permiso.
+Para editar funciones del backend, mantener npx convex dev en otra terminal. Los cambios de frontend se muestran con npm run dev; npm start requiere una nueva compilación.
+En otra computadora se necesita npm ci, configurar .env.local con las propias credenciales y seleccionar el proyecto de Convex. README.md describe cada variable. Los secretos no se suben al repositorio ni a Drive.
 
-## Qué deberías poder explicar en la entrevista
+## Automatizaciones
 
-**Clerk autentica; Convex autoriza.** Clerk dice quién está conectado. Convex decide qué registros puede leer o modificar esa persona. Los botones no son una defensa de seguridad.
+Docker Desktop debe estar iniciado. docker compose --env-file .env.n8n up -d levanta n8n. El editor está en http://localhost:5678 y su cuenta local es independiente de Clerk.
+Los tres exports están en n8n/workflows. Los workflows de solicitudes y vencimientos usan el de errores como manejador. Las notificaciones son registros simulados; no se envían correos a personas.
+Convex Cloud necesita una dirección HTTPS para alcanzar el webhook. compose.tunnel.yml ofrece un túnel temporal con un gateway que solo acepta POST /webhook/lendloop-events y comprueba la firma antes de reenviar. El editor no queda expuesto.
+El comando de inicio del perfil de túnel es docker compose --env-file .env.n8n -f compose.yml -f compose.tunnel.yml up -d. La URL temporal cambia al recrear el túnel: debe actualizarse N8N_WEBHOOK_URL en Convex. Para una entrega estable se necesita un hostname permanente o n8n alojado.
+La integración conectada entregó tres eventos y deduplicó un replay. El workflow diario se ejecutó sin préstamos vencidos. Evidencia en docs/connected-verification.json. Para reconectar el túnel, ejecutar node scripts/connect-automations.mjs o abrir Start-Automations.cmd con Docker iniciado.
 
-**Una solicitud todavía no reserva.** La reserva ocurre al aprobar y vuelve a comprobar las fechas en una transacción. Esto evita que dos aprobaciones se pisen.
+## Recorrido de demostración
 
-**El outbox evita perder eventos.** Guardar el préstamo y crear el evento ocurren juntos. Después un proceso intenta entregarlo; si n8n está caído, el evento sigue guardado.
+En /demo, Sam puede buscar una herramienta y solicitar fechas. Cambiar a Alex permite aprobar una solicitud de su herramienta. Volver a Sam permite registrar la devolución cuando el préstamo comenzó. Morgan muestra los controles de administrador.
+En la aplicación conectada, repetir el recorrido con dos cuentas y dos perfiles del navegador. El catálogo, las publicaciones y los préstamos se guardan en Convex. La demo se reinicia al refrescar.
+Expandir Automation activity permite comprobar la entrega del registro de notificación. Una solicitud pendiente no reserva fechas; la aprobación vuelve a comprobar disponibilidad.
 
-**La firma no es cifrado.** HTTPS protege el tránsito. HMAC permite comprobar que el mensaje provino de quien conoce la clave y que no cambió. También firmamos la ruta, el método y la hora.
+## Verificaciones y capturas
 
-**Idempotencia es tolerar reintentos.** Si el mismo evento llega dos veces, solo queda una notificación. Los recordatorios tienen una clave compuesta por préstamo y día UTC.
+npm run check comprueba TypeScript, pruebas automatizadas y compilación. npm run test:e2e recorre la demo en Chromium. El checklist de la infraestructura real está en docs/ACCEPTANCE.md.
+Con la app abierta, node scripts/capture-portfolio.mjs guarda cinco capturas en docs/portfolio/capturas: catálogo, espacio de trabajo, solicitud, administración y móvil. La banda de demo debe permanecer visible al usarlas en el portfolio.
 
-**Un recordatorio se vuelve a validar al escribir.** Entre consultar un préstamo vencido y procesar el recordatorio, alguien puede devolver la herramienta. El servidor comprueba el estado otra vez.
+## Qué explicar en una entrevista
 
-**El canal es simulado.** Se registran las notificaciones en Convex. Mandar emails reales agregaría un efecto externo que necesita otras garantías. No digas que está integrado un servicio que no usamos.
+Clerk autentica; Convex autoriza. Los permisos se comprueban en el servidor. El préstamo y su evento se guardan en una misma transacción. Un proceso entrega el evento con reintentos, y un callback repetido no crea notificaciones duplicadas.
+HTTPS cifra el transporte. HMAC autentica la integración y detecta cambios. Cada dirección usa una clave distinta. Los recordatorios se identifican por préstamo y día UTC y vuelven a comprobar que el préstamo siga vencido.
 
-**Límites conocidos.** Hay consultas completas pensadas para una comunidad pequeña. Producción necesitaría paginación, alertas operativas, rate limits, runners aislados de n8n y reglas de devolución/disputas más completas.
+## Antes de publicar
 
-La prueba permite asistencia con LLM. Conviene ser transparente si te preguntan y, sobre todo, entender las decisiones y poder modificar el código durante la entrevista.
+Revisar el diseño con Diego, confirmar la prueba de dos sesiones y elegir un alojamiento estable. GitHub, la postulación y el portfolio online son pasos posteriores. No presentar la app como un producto comercial con usuarios reales.
+
+## Fotos y seguridad
+
+Las publicaciones permiten una foto opcional desde Edit listing → Choose a photo → Upload photo. Al crear una publicación, guardar primero los datos. Ver ../PHOTOS.md o docs/PHOTOS.md para la configuración; los controles de ciberseguridad están separados en SECURITY.md.

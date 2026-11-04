@@ -1,3 +1,4 @@
+import { upload as uploadPhoto, read as readPhoto } from "./photoHttp";
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
@@ -74,4 +75,6 @@ for (const path of ["/automation/overdue", "/automation/notify", "/automation/re
     }),
   });
 }
+http.route({ path: "/photos", method: "POST", handler: uploadPhoto });
+http.route({ path: "/photos", method: "GET", handler: readPhoto });
 export default http;

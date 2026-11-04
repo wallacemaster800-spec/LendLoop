@@ -1,20 +1,12 @@
-import {
-  ArrowUpRight,
-  Repeat2,
-  Drill,
-  Sprout,
-  CookingPot,
-  Tent,
-  Hammer,
-  Package,
-} from "lucide-react";
+import { ArrowUpRight, Drill, Sprout, CookingPot, Tent, Hammer, Package } from "lucide-react";
 export function Brand() {
   return (
     <a href="/" className="brand" aria-label="LendLoop home">
-      <span className="brand-mark">
-        <Repeat2 size={23} strokeWidth={2.4} />
+      <span className="brand-mark" aria-hidden="true">
+        ↗<br />↙
       </span>
-      LendLoop<span className="brand-dot">.</span>
+      <span>LendLoop</span>
+      <span className="brand-dot">_</span>
     </a>
   );
 }
@@ -29,15 +21,15 @@ export function ToolIcon({ category, size = 56 }: { category: string; size?: num
         "Hand tools": Hammer,
       } as Record<string, typeof Drill>
     )[category] ?? Package;
-  return <Icon size={size} strokeWidth={1.35} aria-hidden="true" />;
+  return <Icon size={size} strokeWidth={1.5} aria-hidden="true" />;
 }
 export function Footer() {
   return (
     <footer>
       <Brand />
-      <span>Good tools. Better neighbors.</span>
+      <span>Less stuff. More possibility.</span>
       <a href="#top">
-        Back to top <ArrowUpRight size={14} />
+        Back to top <ArrowUpRight size={16} />
       </a>
     </footer>
   );

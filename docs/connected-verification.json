@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-03T15:27:39.650Z",
+  "deployment": "development",
+  "identityMethod": "Convex CLI synthetic identities; not two Clerk browser sessions",
+  "loanLifecycle": "request, owner approval, return, archive",
+  "borrowerApprovalBlocked": true,
+  "signedDeliveries": 3,
+  "replayDeduplicated": true,
+  "notificationChannel": "mock"
+}

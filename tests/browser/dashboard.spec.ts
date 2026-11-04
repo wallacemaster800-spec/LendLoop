@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
 test("local setup is explicit and public page exposes no sample owners", async ({ page }) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Big plans. Small footprint." })).toBeVisible();
+  await page.goto("/demo/public");
   await expect(
-    page.getByText("Clerk and Convex aren’t configured yet.", { exact: false }),
+    page.getByRole("heading", { name: "Your next project. Already on someone’s shelf." }),
   ).toBeVisible();
+  await expect(page.getByText("Sample tools", { exact: false })).toBeVisible();
   await expect(page.getByText("Sam Rivera")).toHaveCount(0);
 });
 test("browse, filter, create, edit and remove a listing", async ({ page }) => {
@@ -84,6 +84,22 @@ test("desktop preview has no browser errors", async ({ page }) => {
   await expect(page.locator(".tool-card")).toHaveCount(6);
   await page.screenshot({ path: "test-results/desktop.png", fullPage: true });
   expect(errors).toEqual([]);
-  await page.goto("/");
+  await page.goto("/demo/public");
   await page.screenshot({ path: "test-results/home.png", fullPage: true });
+});
+
+test("public catalog combines category and search filters", async ({ page }) => {
+  await page.goto("/demo/public");
+  await page.getByRole("button", { name: "Kitchen", exact: true }).click();
+  await expect(page.locator(".public-tool")).toHaveCount(1);
+  await page.getByLabel("Search public tools").fill("not-in-catalog");
+  await expect(page.getByRole("heading", { name: "No matching tools" })).toBeVisible();
+  await page.getByLabel("Search public tools").fill("mixer");
+  await expect(page.locator(".public-tool")).toHaveCount(1);
+});
+test("public catalog fits a narrow mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/demo/public");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByRole("link", { name: "Explore the tools" })).toBeVisible();
 });

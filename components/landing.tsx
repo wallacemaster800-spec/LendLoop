@@ -1,156 +1,188 @@
-import type { ReactNode } from "react";
-import { ArrowRight, ArrowUpRight, Repeat2, ShieldCheck } from "lucide-react";
+"use client";
+import { useState, type ReactNode } from "react";
+import { ArrowRight, ArrowUpRight, Search, ShieldCheck, CalendarDays, Repeat2 } from "lucide-react";
 import { Brand, Footer, ToolIcon } from "./brand";
+import { ToolVisual } from "./tool-visual";
+import { categories } from "@/lib/domain";
 export function Landing({
   tools,
   setup = false,
   signIn,
+  demo = false,
 }: {
   tools: { name: string; category: string }[];
   setup?: boolean;
   signIn?: ReactNode;
+  demo?: boolean;
 }) {
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All tools");
+  const visible = tools.filter(
+    (t) =>
+      (category === "All tools" || t.category === category) &&
+      t.name.toLowerCase().includes(search.toLowerCase()),
+  );
   return (
-    <div id="top" className="site">
+    <div id="top" className="site landing">
+      {demo && (
+        <div className="demo-banner">
+          <strong>Public-page preview</strong>
+          <span>Sample tools · portfolio demonstration</span>
+          <a href="/demo">
+            Open workspace <ArrowUpRight size={14} />
+          </a>
+        </div>
+      )}
+      <div className="market-announcement">A little borrowing. A lot more possibility.</div>
       <header className="topbar">
         <Brand />
         <nav>
+          <a href="#tools">Browse tools</a>
           <a href="#how">How it works</a>
           {signIn ?? (
             <a className="button primary small" href="/demo">
-              Explore the demo <ArrowUpRight size={16} />
+              Join the neighborhood <ArrowRight size={16} />
             </a>
           )}
         </nav>
       </header>
       <main>
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="eyebrow">
-              <span className="live-dot" /> THE NEIGHBORHOOD TOOL LIBRARY
-            </span>
+        <section className="market-hero">
+          <div>
+            <span className="eyebrow">THE NEIGHBORHOOD TOOL LIBRARY</span>
             <h1>
-              Big plans.
+              Your next project.
               <br />
-              Small footprint.
+              <em>Already on someone’s shelf.</em>
             </h1>
-            <p className="hero-description">
-              Borrow what you need.
-              <br />
-              Lend what you don’t.
+            <p>
+              Find the tools you need, borrow from your neighbors, and make room for more
+              possibilities.
             </p>
-            <p className="muted hero-detail">
-              A drill for the weekend. A tent for the trail. The right tool might be just around the
-              corner.
-            </p>
-            <div className="hero-actions">
-              {signIn ?? (
-                <a className="button primary" href="/demo">
-                  Take a look around <ArrowRight size={18} />
-                </a>
-              )}
-              <a className="text-link" href="#tools">
-                Browse the shelf
-              </a>
-            </div>
-            <div className="hero-footnote">
-              <ShieldCheck size={17} /> Share a little. Make room for more.
-            </div>
+            <a className="button primary" href="#tools">
+              Explore the tools <ArrowRight size={18} />
+            </a>
+            <span className="hero-footnote">Borrow. Create. Return. Repeat.</span>
           </div>
-          <div className="hero-art" aria-label="Illustration of tools ready to be shared">
-            <span className="art-note">
-              LESS BUYING.
-              <br />
-              MORE DOING.
-            </span>
-            <div className="art-tool drill">
-              <ToolIcon category="Power tools" size={130} />
-              <span>For your next big idea</span>
+          <div className="hero-products">
+            <div className="hero-product">
+              <ToolVisual category="Power tools" />
+              <div>
+                <strong>Big ideas. Small toolbox.</strong>
+                <span>The right equipment, for just the time you need.</span>
+              </div>
             </div>
-            <div className="art-tool plant">
-              <ToolIcon category="Garden" size={86} />
+            <div className="hero-product-mini">
+              <ToolVisual category="Camping" />
+              <span>For the weekend, too.</span>
             </div>
-            <div className="art-tool tent">
-              <ToolIcon category="Camping" size={106} />
-            </div>
-            <div className="art-stamp">
-              <Repeat2 size={25} />
-              <span>
-                Made to
-                <br />
-                be shared.
-              </span>
-            </div>
-            <span className="art-caption">The best things go around.</span>
           </div>
         </section>
+        <div className="market-benefits">
+          <span>
+            <CalendarDays size={19} />
+            Choose your dates
+          </span>
+          <span>
+            <ShieldCheck size={19} />
+            Owner-approved requests
+          </span>
+          <span>
+            <Repeat2 size={19} />
+            Share more. Store less.
+          </span>
+        </div>
         {setup && (
           <aside className="setup-banner">
-            <strong>Your local workspace is ready to connect.</strong>
-            <span>
-              Clerk and Convex aren’t configured yet. The demo uses sample data and resets when you
-              leave.
-            </span>
-            <a href="/demo">
-              Open demo <ArrowRight size={16} />
-            </a>
+            <strong>Workspace connection pending.</strong>
+            <span>Explore the sample catalog while account setup is completed.</span>
+            <a href="/demo">Open demo →</a>
           </aside>
         )}
         <section id="tools" className="shelf-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">A SHARED SHELF</span>
-              <h2>Ready for your next project.</h2>
+              <span className="eyebrow">FIND SOMETHING USEFUL</span>
+              <h2>Browse the neighborhood</h2>
             </div>
-            <span className="muted">Sign in to see details &amp; borrow</span>
+            <label className="search">
+              <Search size={18} />
+              <input
+                aria-label="Search public tools"
+                placeholder="What are you working on?"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
           </div>
-          {tools.length ? (
+          <div className="category-chips public-categories">
+            {["All tools", ...categories].map((c) => (
+              <button key={c} aria-pressed={category === c} onClick={() => setCategory(c)}>
+                {c !== "All tools" && <ToolIcon category={c} size={18} />} {c}
+              </button>
+            ))}
+          </div>
+          <div className="results-label">
+            {visible.length} tools available today
+            <span>Sign in for details and borrowing dates · category illustrations</span>
+          </div>
+          {visible.length ? (
             <div className="public-grid">
-              {tools.map((tool, i) => (
-                <article className="public-tool" key={tool.name + i}>
-                  <div className={"tool-art art-" + tool.category.split(" ")[0].toLowerCase()}>
-                    <ToolIcon category={tool.category} />
+              {visible.map((t, i) => (
+                <article className="public-tool" key={t.name + i}>
+                  <div className={"public-art art-" + t.category.split(" ")[0].toLowerCase()}>
+                    <ToolVisual category={t.category} />
                   </div>
-                  <div>
-                    <span className="eyebrow">{tool.category}</span>
-                    <h3>{tool.name}</h3>
+                  <div className="public-tool-info">
+                    <span className="eyebrow">{t.category}</span>
+                    <h3>{t.name}</h3>
+                    <span className="public-caption">Sign in to request dates</span>
                   </div>
                 </article>
               ))}
             </div>
           ) : (
             <div className="empty">
-              <ToolIcon category="Hand tools" size={35} />
-              <h3>
-                {setup ? "Your neighborhood starts here." : "A fresh shelf, full of possibility."}
-              </h3>
+              <Search size={32} />
+              <h3>{tools.length ? "No matching tools" : "The first listing could be yours."}</h3>
               <p>
-                {setup
-                  ? "Connect Convex to load real listings, or explore the sample workspace."
-                  : "Be the first to lend something useful."}
+                {tools.length
+                  ? "Try a different name or category."
+                  : "Sign in and share a tool with the neighborhood."}
               </p>
             </div>
           )}
         </section>
         <section id="how" className="how-section">
           <div>
-            <span className="eyebrow">KEEP IT SIMPLE</span>
+            <span className="eyebrow">GOOD TOOLS DESERVE MORE USE</span>
             <h2>
-              Useful things.
+              From their shelf
               <br />
-              Used more.
+              to your next project.
             </h2>
+            <p>Simple arrangements, with a person on the other side.</p>
           </div>
           <div className="steps">
             {[
-              ["01", "Find your tool", "Browse the shelf and choose the dates you need."],
-              ["02", "Make a plan", "Your neighbor approves the request. You arrange the handoff."],
-              ["03", "Bring it back", "Return it with care and mark the loan as returned."],
+              ["01", "Find your tool", "Browse the catalog and request the dates you need."],
+              [
+                "02",
+                "Plan your pickup",
+                "Wait for the owner’s approval, then arrange your handoff together.",
+              ],
+              [
+                "03",
+                "Return with care",
+                "Mark the loan as returned and make room for the next project.",
+              ],
             ].map(([n, title, copy]) => (
               <article key={n}>
                 <span>{n}</span>
-                <h3>{title}</h3>
-                <p>{copy}</p>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{copy}</p>
+                </div>
               </article>
             ))}
           </div>

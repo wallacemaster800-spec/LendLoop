@@ -84,7 +84,8 @@ export const remove = mutation({
       .first();
     if (active && !user.admin)
       fail("Mark outstanding loans as returned before removing this listing.");
-    await ctx.db.patch(id, { archived: true });
+    if (tool.photoId) await ctx.storage.delete(tool.photoId);
+    await ctx.db.patch(id, { archived: true, photoId: undefined });
     const pending = await ctx.db
       .query("loans")
       .withIndex("by_tool_status", (q) => q.eq("tool", id).eq("status", "pending"))

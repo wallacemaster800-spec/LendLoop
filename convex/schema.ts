@@ -17,10 +17,13 @@ export const status = v.union(
   v.literal("returned"),
 );
 export default defineSchema({
-  members: defineTable({ subject: v.string(), name: v.string(), trusted: v.boolean() }).index(
-    "by_subject",
-    ["subject"],
-  ),
+  members: defineTable({
+    subject: v.string(),
+    name: v.string(),
+    trusted: v.boolean(),
+    photoWindowStart: v.optional(v.number()),
+    photoUploadCount: v.optional(v.number()),
+  }).index("by_subject", ["subject"]),
   tools: defineTable({
     owner: v.id("members"),
     name: v.string(),
@@ -28,9 +31,17 @@ export default defineSchema({
     condition,
     description: v.string(),
     archived: v.boolean(),
+    photoId: v.optional(v.id("_storage")),
+    photoVersion: v.optional(v.number()),
   })
     .index("by_owner", ["owner"])
     .index("by_archived", ["archived"]),
+  photoUploads: defineTable({
+    tool: v.id("tools"),
+    subject: v.string(),
+    expiresAt: v.number(),
+    used: v.boolean(),
+  }).index("by_expiry", ["expiresAt"]),
   loans: defineTable({
     tool: v.id("tools"),
     lender: v.id("members"),

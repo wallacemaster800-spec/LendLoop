@@ -1,0 +1,11 @@
+{
+  "checkedAt": "2026-11-04T14:11:16.201Z",
+  "method": "Authenticated API integration using an existing Clerk development session; not a browser file-picker test",
+  "jpegUpload": true,
+  "webpRead": true,
+  "width": 1600,
+  "anonymousReadBlocked": true,
+  "crossOriginBlocked": true,
+  "fakeImageRejected": true,
+  "photoRemoval": true
+}
