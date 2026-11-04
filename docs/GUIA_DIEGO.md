@@ -50,4 +50,4 @@ Revisar el diseño con Diego, confirmar la prueba de dos sesiones y elegir un al
 
 ## Fotos y seguridad
 
-Las publicaciones permiten una foto opcional desde Edit listing → Choose a photo → Upload photo. Al crear una publicación, guardar primero los datos. Ver ../PHOTOS.md o docs/PHOTOS.md para la configuración; los controles de ciberseguridad están separados en SECURITY.md.
+Las publicaciones permiten una foto opcional desde Edit listing → Choose a photo → Upload photo. Al crear una publicación, guardar primero los datos. Ver [PHOTOS.md](PHOTOS.md) para la configuración y [SECURITY.md](SECURITY.md) para los controles de ciberseguridad.

@@ -8,6 +8,10 @@ A neighborhood tool library built with Next.js App Router, TypeScript, Clerk, Co
 
 This is a take-home exercise, not a production service. Source, exported workflows and local setup are included. The in-memory demo is available locally at /demo; it is explicitly separate from the authenticated app. Verification evidence and remaining manual checks are recorded in [STATUS.md](docs/STATUS.md).
 
+![LendLoop sample workspace](docs/portfolio/capturas/02-workspace.png)
+
+*Interactive demo with fictional sample data; the connected app adds Clerk authentication and persistent Convex data.*
+
 ## Run locally
 
 Requires Node.js 22 and npm. Docker Desktop is needed only for local n8n.

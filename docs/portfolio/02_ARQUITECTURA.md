@@ -55,4 +55,3 @@ La versión de prueba utiliza consultas completas y un conjunto pequeño de dato
 El gateway restringe la entrada a POST /webhook/lendloop-events y valida HMAC antes de reenviar a n8n. El editor permanece privado. El túnel temporal permite la prueba con Convex Cloud; un entorno público necesita un hostname estable.
 
 El 3 de noviembre se verificaron tres entregas reales de eventos y la deduplicación de un replay con identidades sintéticas de la CLI. El workflow diario consultó Convex con cero préstamos vencidos. Las reglas de vencimiento, revalidación y deduplicación también tienen pruebas automatizadas. La prueba de dos sesiones reales de Clerk sigue en el checklist de aceptación.
-
